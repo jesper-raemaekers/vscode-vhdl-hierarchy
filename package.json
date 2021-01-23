@@ -22,15 +22,12 @@
 			},
 			{
 				"command": "vhdl-hierarchy.analyze",
-				"title": "Analyze the workspace"
+				"title": "Analyze the workspace",
+				"icon": "$(search)"
 			},
 			{
-				"command": "vhdl-hierarchy.refreshEntry",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
+				"command": "vhdl-hierarchy.refresh",
+				"title": "Refresh"
 			}
 		],
 		"views": {
@@ -45,11 +42,23 @@
 			"view/title": [
 				{
 					"command": "vhdl-hierarchy.analyze",
-					"when": "view == entityHierachy",
+					"when": "view == vhdlHierachy",
 					"group": "navigation"
 				}
 			]
-		}
+		},
+		"configuration": [
+			{
+				"title": "VHDL hierarchy",
+				"properties": {
+					"VHDL-hierarchy.TopLevelFile": {
+						"type": "string",
+						"description": "Top level file name",
+						"default": ""
+					}
+				}
+			}
+		]
 	},
 	"scripts": {
 		"compile": "tsc -p ./",

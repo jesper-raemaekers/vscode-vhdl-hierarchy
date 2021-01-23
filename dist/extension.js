@@ -32,7 +32,9 @@ class EntityProvider {
         this.entityList = [];
     }
     refresh() {
-        this._onDidChangeTreeData.fire(undefined);
+        return __awaiter(this, void 0, void 0, function* () {
+            this._onDidChangeTreeData.fire(undefined);
+        });
     }
     // editEntity(ent:Entity): void{
     // 	vscode.window.showTextDocument(ent.filePath);
@@ -40,6 +42,12 @@ class EntityProvider {
     analyze() {
         return __awaiter(this, void 0, void 0, function* () {
             this.entityList = [];
+            let topLevelSetting = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+            if (!this.topLevelFile) {
+                if (topLevelSetting) {
+                    this.topLevelFile = topLevelSetting;
+                }
+            }
             if (!this.topLevelFile) {
                 vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
             }
@@ -63,7 +71,7 @@ class EntityProvider {
                 // 	}
                 // 	this.entityList.push(newEntity);
                 // });
-                vscode.window.withProgress({
+                yield vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: "Analyzing VHDL file ",
                     cancellable: false,
@@ -84,8 +92,8 @@ class EntityProvider {
                             ent.findChieldEntities(this.entityList);
                         }
                         console.log("Analysis complete " + this.entityList.length);
-                        vscode.commands.executeCommand('vhdlhierarchy.refreshEntry');
-                        resolve();
+                        vscode.commands.executeCommand('vhdl-hierarchy.refresh');
+                        resolve(undefined);
                     }));
                     return p;
                 }));
@@ -129,7 +137,11 @@ class EntityProvider {
         return element;
     }
     getChildren(element) {
+        let topLevelSetting = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
         if (!this.topLevelFile) {
+            if (topLevelSetting) {
+                this.topLevelFile = topLevelSetting;
+            }
             vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
             return Promise.resolve([]);
         }
@@ -355,13 +367,13 @@ function activate(context) {
         getVhdlFileItems(path, files);
         const entityProvider = new EntityProvider_1.EntityProvider(vscode.workspace.rootPath);
         vscode.window.registerTreeDataProvider('vhdlHierachy', entityProvider);
+        vscode.commands.registerCommand('vhdl-hierarchy.refresh', () => entityProvider.refresh());
         let disposable = vscode.commands.registerCommand('vhdl-hierarchy.setTopLevel', () => {
             // The code you place here will be executed every time your command is executed
             // Display a message box to the user
             //  vscode.window.showQuickPick(files, { onDidAccept: handleSelectTopLEvel});
             const quickpick = vscode.window.createQuickPick();
             quickpick.items = files;
-            vscode.commands.registerCommand('vhdl-hierarchy.refreshEntry', () => entityProvider.refresh());
             quickpick.onDidChangeSelection(items => {
                 vscode.window.showInformationMessage('Set top level file:  ' + items[0].label);
                 entityProvider.topLevelFile = items[0].base;
@@ -372,8 +384,10 @@ function activate(context) {
             });
             quickpick.show();
         });
-        context.subscriptions.push(disposable);
-        context.subscriptions.push(vscode.commands.registerCommand('vhdl-hierarchy.analyze', () => entityProvider.analyze()));
+        // context.subscriptions.push(disposable);
+        // context.subscriptions.push(
+        vscode.commands.registerCommand('vhdl-hierarchy.analyze', () => entityProvider.analyze());
+        vscode.commands.executeCommand('vhdl-hierarchy.analyze');
     }
     else {
         console.warn("Could not start the node provider as the workspace root is empty");

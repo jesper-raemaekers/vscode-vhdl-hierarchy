@@ -31,6 +31,10 @@ export function activate(context: vscode.ExtensionContext) {
 		const entityProvider = new EntityProvider(vscode.workspace.rootPath);
 		vscode.window.registerTreeDataProvider('vhdlHierachy', entityProvider);
 
+		vscode.commands.registerCommand('vhdl-hierarchy.refresh', () =>
+			entityProvider.refresh()
+		);
+
 
 		let disposable = vscode.commands.registerCommand('vhdl-hierarchy.setTopLevel', () => {
 			// The code you place here will be executed every time your command is executed
@@ -41,9 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 			const quickpick = vscode.window.createQuickPick<StringItem>();
 			quickpick.items = files;
 
-			vscode.commands.registerCommand('vhdl-hierarchy.refreshEntry', () =>
-				entityProvider.refresh()
-			);
+
 
 			quickpick.onDidChangeSelection(items => {
 				vscode.window.showInformationMessage('Set top level file:  ' + items[0].label);
@@ -57,9 +59,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 		});
-		context.subscriptions.push(disposable);
+		// context.subscriptions.push(disposable);
 
-		context.subscriptions.push(vscode.commands.registerCommand('vhdl-hierarchy.analyze', () => entityProvider.analyze()));
+		// context.subscriptions.push(
+		vscode.commands.registerCommand('vhdl-hierarchy.analyze', () => entityProvider.analyze());
+
+		vscode.commands.executeCommand('vhdl-hierarchy.analyze');
 
 
 
