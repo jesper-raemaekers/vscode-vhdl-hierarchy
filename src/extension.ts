@@ -36,29 +36,29 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 
 
-		let disposable = vscode.commands.registerCommand('vhdl-hierarchy.setTopLevel', () => {
-			// The code you place here will be executed every time your command is executed
+		// let disposable = vscode.commands.registerCommand('vhdl-hierarchy.setTopLevel', () => {
+		// 	// The code you place here will be executed every time your command is executed
 
-			// Display a message box to the user
+		// 	// Display a message box to the user
 
-			//  vscode.window.showQuickPick(files, { onDidAccept: handleSelectTopLEvel});
-			const quickpick = vscode.window.createQuickPick<StringItem>();
-			quickpick.items = files;
-
-
-
-			quickpick.onDidChangeSelection(items => {
-				vscode.window.showInformationMessage('Set top level file:  ' + items[0].label);
-				entityProvider.topLevelFile = items[0].base;
-			});
-			quickpick.onDidAccept(() => {
-				quickpick.hide();
-				vscode.commands.executeCommand('vhdl-hierarchy.analyze');
-			});
-			quickpick.show();
+		// 	//  vscode.window.showQuickPick(files, { onDidAccept: handleSelectTopLEvel});
+		// 	const quickpick = vscode.window.createQuickPick<StringItem>();
+		// 	quickpick.items = files;
 
 
-		});
+
+		// 	quickpick.onDidChangeSelection(items => {
+		// 		vscode.window.showInformationMessage('Set top level file:  ' + items[0].label);
+		// 		entityProvider.topLevelFile = items[0].base;
+		// 	});
+		// 	quickpick.onDidAccept(() => {
+		// 		quickpick.hide();
+		// 		vscode.commands.executeCommand('vhdl-hierarchy.analyze');
+		// 	});
+		// 	quickpick.show();
+
+
+		// });
 		// context.subscriptions.push(disposable);
 
 		// context.subscriptions.push(

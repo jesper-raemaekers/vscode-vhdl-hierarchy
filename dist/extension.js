@@ -23,6 +23,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EntityProvider = void 0;
 const vscode = __webpack_require__(/*! vscode */ "vscode");
 const fs = __webpack_require__(/*! fs */ "fs");
+const path = __webpack_require__(/*! path */ "path");
 const entity_1 = __webpack_require__(/*! ./entity */ "./src/entity.ts");
 class EntityProvider {
     constructor(workspaceRoot) {
@@ -42,35 +43,25 @@ class EntityProvider {
     analyze() {
         return __awaiter(this, void 0, void 0, function* () {
             this.entityList = [];
-            let topLevelSetting = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
-            if (!this.topLevelFile) {
-                if (topLevelSetting) {
-                    this.topLevelFile = topLevelSetting;
-                }
-            }
-            if (!this.topLevelFile) {
-                vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
-            }
-            else {
-                const path = vscode.workspace.rootPath;
+            // let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+            // if (!this.topLevelFile) {
+            // 	if (topLevelSetting) {
+            // 		this.topLevelFile = topLevelSetting;
+            // 	}
+            // }
+            // if (!this.topLevelFile) {
+            // 	vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
+            // }
+            this.topLevelFile = this.getTopLevelFile();
+            let workspaceFolder = vscode.workspace.workspaceFolders;
+            // if (workspaceFolder) {
+            // 	let thisWorkspace = workspaceFolder[0];
+            // else {
+            if (workspaceFolder) {
+                const path = workspaceFolder[0].uri.fsPath;
                 console.log('start analyzing with root file ' + this.topLevelFile);
-                let files = [];
-                getVhdlFiles(path, files);
-                // files.forEach(file =>{this.entityList.push(new Entity(file));});
-                // files.forEach(function(this:any, file:string)
-                // {
-                // 	this.entityList.push(new Entity(file));
-                // }.bind(this)	
-                // );
-                // readInterface.on('line', function(this:any, line: any) {
-                // files.forEach(file =>{
-                // 	var newEntity = new Entity(file);
-                // 	if(file === this.topLevelFile)
-                // 	{
-                // 		this.topLevelEntity = newEntity;
-                // 	}
-                // 	this.entityList.push(newEntity);
-                // });
+                let files = getSourceFiles(path);
+                // getVhdlFiles(path!, files);
                 yield vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
                     title: "Analyzing VHDL file ",
@@ -84,6 +75,7 @@ class EntityProvider {
                             this.entityList.push(new entity_1.Entity(file));
                             progress.report({ increment: (progressCounter / files.length), message: this.entityList[this.entityList.length - 1].label + "..." });
                             if (file === this.topLevelFile) {
+                                // not found because is now filename instead of path
                                 this.topLevelEntity = this.entityList[this.entityList.length - 1];
                             }
                             yield this.entityList[this.entityList.length - 1].readFromFile();
@@ -97,39 +89,6 @@ class EntityProvider {
                     }));
                     return p;
                 }));
-                // files.forEach(function(this:any, file:string)
-                // 	{
-                // 	}.bind(this)	
-                // 	);
-                // await this.entityList[this.entityList.length - 1].readFromFile();	
-                // var bar = new Promise((resolve, reject) => {
-                // 	files.forEach(function(this:any, file:string)
-                // 	{
-                // 		this.entityList.push(new Entity(file));
-                // 		if (file === this.topLevelFile)
-                // 		{
-                // 			this.topLevelEntity = this.entityList[this.entityList.length - 1];
-                // 		}
-                // 	}.bind(this)	
-                // 	);
-                // 	resolve();
-                // });
-                // bar.then(() => {
-                // 	console.log('All done! number of entities: ' + this.entityList.length);
-                // 	console.log('top level entity name: ' + this.topLevelEntity?.label);
-                // });
-                // // await this.entityList[0].readFromFile();
-                // // var foo = new Promise((resolve, reject) => {
-                // // 	this.entityList.forEach(async function(this:any, ent:Entity)
-                // // 	{
-                // // 		await ent.readFromFile();
-                // // 		resolve();
-                // // 	}.bind(this)	
-                // // 	);
-                // // });
-                // // foo.then(() => {
-                // // 	console.log('All done 2 number of entities: ' + this.entityList.length);
-                // // });
             }
         });
     }
@@ -137,15 +96,15 @@ class EntityProvider {
         return element;
     }
     getChildren(element) {
-        let topLevelSetting = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
-        if (!this.topLevelFile) {
-            if (topLevelSetting) {
-                this.topLevelFile = topLevelSetting;
-            }
-            vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
-            return Promise.resolve([]);
-        }
-        const root = [new entity_1.Entity("\test\test\entity1.vhd")];
+        // let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+        // if (!this.topLevelFile) {
+        // 	if (topLevelSetting) {
+        // 		this.topLevelFile = topLevelSetting;
+        // 	}
+        // 	vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
+        // 	return Promise.resolve([]);
+        // }
+        // this.topLevelFile = this.getTopLevelFile();
         if (element) {
             return Promise.resolve(element.childEntities);
         }
@@ -156,50 +115,6 @@ class EntityProvider {
             return Promise.resolve([]);
         }
     }
-    //  public getVhdlFiles(dir:String, filelist:string[] ) : string[]
-    // {
-    // 	var path = require('path');
-    // 	var fs = require('fs'),
-    // 	files = fs.readdirSync(dir);
-    // 	filelist = filelist || [];
-    // 	files.forEach(function(file:String) {
-    // 		if (fs.statSync(path.join(dir, file)).isDirectory()) {
-    // 			filelist = EntityProvider.getVhdlFiles(path.join(dir, file), filelist);
-    // 		}
-    // 		else if (path.extname(file) === ".vhd"){
-    // 			filelist.push(path.join(dir, file));
-    // 		}
-    // 	});
-    // 	return filelist;
-    // }
-    // /**
-    //  * Given the path to package.json, read all its dependencies and devDependencies.
-    //  */
-    // private getDepsInPackageJson(packageJsonPath: string): Dependency[] {
-    // 	if (this.pathExists(packageJsonPath)) {
-    // 		const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    // 		const toDep = (moduleName: string, version: string): Dependency => {
-    // 			if (this.pathExists(path.join(this.workspaceRoot, 'node_modules', moduleName))) {
-    // 				return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.Collapsed);
-    // 			} else {
-    // 				return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None, {
-    // 					command: 'extension.openPackageOnNpm',
-    // 					title: '',
-    // 					arguments: [moduleName]
-    // 				});
-    // 			}
-    // 		};
-    // 		const deps = packageJson.dependencies
-    // 			? Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep]))
-    // 			: [];
-    // 		const devDeps = packageJson.devDependencies
-    // 			? Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))
-    // 			: [];
-    // 		return deps.concat(devDeps);
-    // 	} else {
-    // 		return [];
-    // 	}
-    // }
     pathExists(p) {
         try {
             fs.accessSync(p);
@@ -209,20 +124,46 @@ class EntityProvider {
         }
         return true;
     }
+    getTopLevelFile() {
+        let topLevelSetting = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+        if (topLevelSetting) {
+            if (this.pathExists(topLevelSetting)) {
+                return topLevelSetting;
+            }
+            let workspaceFolder = vscode.workspace.workspaceFolders;
+            if (workspaceFolder) {
+                let thisWorkspace = workspaceFolder[0];
+                let newPath = path.join(thisWorkspace.uri.fsPath, topLevelSetting);
+                if (this.pathExists(newPath)) {
+                    return newPath;
+                }
+            }
+        }
+        vscode.window.showErrorMessage('Top level file not set in settings, cannot analyze VHDL workspace.');
+        return undefined;
+    }
 }
 exports.EntityProvider = EntityProvider;
-function getVhdlFiles(dir, filelist) {
+function getSourceFiles(dir) {
+    let sourceExtensions = ['.vhd', '.qsys'];
     var path = __webpack_require__(/*! path */ "path");
     var fs = __webpack_require__(/*! fs */ "fs"), files = fs.readdirSync(dir);
-    filelist = filelist || [];
-    files.forEach(function (file) {
+    let filelist = [];
+    for (const file of files) {
         if (fs.statSync(path.join(dir, file)).isDirectory()) {
-            filelist = getVhdlFiles(path.join(dir, file), filelist);
+            // let newfiles = ;
+            filelist = filelist.concat(getSourceFiles(path.join(dir, file)));
+            // filelist = getSourceFiles(path.join(dir, file), filelist);
         }
-        else if (path.extname(file) === ".vhd") {
-            filelist.push(path.join(dir, file));
+        else {
+            let ext = path.extname(file);
+            if (sourceExtensions.includes(ext)) {
+                filelist.push(path.join(dir, file));
+            }
         }
-    });
+    }
+    // files.forEach(function (file: String) {
+    // });
     return filelist;
 }
 
@@ -252,6 +193,18 @@ class Entity extends vscode.TreeItem {
         this.label = filename;
         this.command = { command: 'vscode.open', title: "Open File", arguments: [vscode.Uri.file(filePath)] };
         // this.contextValue = 'file';
+        switch (path.extname(filePath)) {
+            case '.vhd':
+                this.type = Entity.Type.Vhdl;
+                this.iconPath = new vscode.ThemeIcon('code');
+                break;
+            case '.qsys':
+                this.type = Entity.Type.Qsys;
+                this.iconPath = new vscode.ThemeIcon('server-environment');
+                break;
+            default:
+                this.type = Entity.Type.Vhdl;
+        }
     }
     // @ts-nocheck
     get tooltip() {
@@ -280,33 +233,10 @@ class Entity extends vscode.TreeItem {
                 output: process.stdout,
                 console: false
             });
-            readInterface.on('line', function (line) {
-                const entityEx = /entity\s(?<entity>\w+)\sis/;
-                const usedEntityEx = /\w+\s+:\s+entity\s+(?<entity_used>[a-zA-Z_.0-9]+)/;
-                const usedCompEx = /component\s(?<component>\w+)/;
-                var regexp = new RegExp(entityEx, 'i'), test = regexp.exec(line);
-                if (test === null || test === void 0 ? void 0 : test.groups) {
-                    var path = __webpack_require__(/*! path */ "path");
-                    this.label = test.groups['entity'];
-                    this.library = path.dirname(this.filePath).split(path.sep).pop();
-                    console.log("entity found:" + test.groups['entity'] + "in lib " + this.library);
-                }
-                var regexp2 = new RegExp(usedEntityEx, 'i'), test2 = regexp2.exec(line);
-                if (test2 === null || test2 === void 0 ? void 0 : test2.groups) {
-                    var usedEntityName = test2.groups['entity_used'];
-                    if (usedEntityName.includes('.')) {
-                        //handle library usage
-                        usedEntityName = usedEntityName.split('.')[1];
-                    }
-                    this.childEntitiesText.push(usedEntityName);
-                    console.log("used entity found:" + usedEntityName);
-                }
-                var regexp3 = new RegExp(usedCompEx, 'i'), test3 = regexp3.exec(line);
-                if (test3 === null || test3 === void 0 ? void 0 : test3.groups) {
-                    this.childEntitiesText.push(test3.groups['component']);
-                    console.log("used component found:" + test3.groups['component']);
-                }
-            }.bind(this));
+            switch (this.type) {
+                case Entity.Type.Vhdl:
+                    readInterface.on('line', function (line) { this.parseVhdlLine(line); }.bind(this));
+            }
             readInterface.on('close', () => {
                 console.log('done reading');
                 if (this.childEntitiesText.length > 0) {
@@ -316,6 +246,33 @@ class Entity extends vscode.TreeItem {
             });
         });
         return foo;
+    }
+    parseVhdlLine(line) {
+        const entityEx = /entity\s(?<entity>\w+)\sis/;
+        const usedEntityEx = /\w+\s+:\s+entity\s+(?<entity_used>[a-zA-Z_.0-9]+)/;
+        const usedCompEx = /component\s(?<component>\w+)/;
+        var regexp = new RegExp(entityEx, 'i'), test = regexp.exec(line);
+        if (test === null || test === void 0 ? void 0 : test.groups) {
+            var path = __webpack_require__(/*! path */ "path");
+            this.label = test.groups['entity'];
+            this.library = path.dirname(this.filePath).split(path.sep).pop();
+            console.log("entity found:" + test.groups['entity'] + "in lib " + this.library);
+        }
+        var regexp2 = new RegExp(usedEntityEx, 'i'), test2 = regexp2.exec(line);
+        if (test2 === null || test2 === void 0 ? void 0 : test2.groups) {
+            var usedEntityName = test2.groups['entity_used'];
+            if (usedEntityName.includes('.')) {
+                //handle library usage
+                usedEntityName = usedEntityName.split('.')[1];
+            }
+            this.childEntitiesText.push(usedEntityName);
+            console.log("used entity found:" + usedEntityName);
+        }
+        var regexp3 = new RegExp(usedCompEx, 'i'), test3 = regexp3.exec(line);
+        if (test3 === null || test3 === void 0 ? void 0 : test3.groups) {
+            this.childEntitiesText.push(test3.groups['component']);
+            console.log("used component found:" + test3.groups['component']);
+        }
     }
     findChieldEntities(list) {
         var _a;
@@ -330,6 +287,13 @@ class Entity extends vscode.TreeItem {
     }
 }
 exports.Entity = Entity;
+(function (Entity) {
+    let Type;
+    (function (Type) {
+        Type[Type["Vhdl"] = 0] = "Vhdl";
+        Type[Type["Qsys"] = 1] = "Qsys";
+    })(Type = Entity.Type || (Entity.Type = {}));
+})(Entity = exports.Entity || (exports.Entity = {}));
 
 
 /***/ }),
@@ -368,22 +332,22 @@ function activate(context) {
         const entityProvider = new EntityProvider_1.EntityProvider(vscode.workspace.rootPath);
         vscode.window.registerTreeDataProvider('vhdlHierachy', entityProvider);
         vscode.commands.registerCommand('vhdl-hierarchy.refresh', () => entityProvider.refresh());
-        let disposable = vscode.commands.registerCommand('vhdl-hierarchy.setTopLevel', () => {
-            // The code you place here will be executed every time your command is executed
-            // Display a message box to the user
-            //  vscode.window.showQuickPick(files, { onDidAccept: handleSelectTopLEvel});
-            const quickpick = vscode.window.createQuickPick();
-            quickpick.items = files;
-            quickpick.onDidChangeSelection(items => {
-                vscode.window.showInformationMessage('Set top level file:  ' + items[0].label);
-                entityProvider.topLevelFile = items[0].base;
-            });
-            quickpick.onDidAccept(() => {
-                quickpick.hide();
-                vscode.commands.executeCommand('vhdl-hierarchy.analyze');
-            });
-            quickpick.show();
-        });
+        // let disposable = vscode.commands.registerCommand('vhdl-hierarchy.setTopLevel', () => {
+        // 	// The code you place here will be executed every time your command is executed
+        // 	// Display a message box to the user
+        // 	//  vscode.window.showQuickPick(files, { onDidAccept: handleSelectTopLEvel});
+        // 	const quickpick = vscode.window.createQuickPick<StringItem>();
+        // 	quickpick.items = files;
+        // 	quickpick.onDidChangeSelection(items => {
+        // 		vscode.window.showInformationMessage('Set top level file:  ' + items[0].label);
+        // 		entityProvider.topLevelFile = items[0].base;
+        // 	});
+        // 	quickpick.onDidAccept(() => {
+        // 		quickpick.hide();
+        // 		vscode.commands.executeCommand('vhdl-hierarchy.analyze');
+        // 	});
+        // 	quickpick.show();
+        // });
         // context.subscriptions.push(disposable);
         // context.subscriptions.push(
         vscode.commands.registerCommand('vhdl-hierarchy.analyze', () => entityProvider.analyze());

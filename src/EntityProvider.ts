@@ -29,40 +29,34 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 
 	async analyze() {
 		this.entityList = [];
-		let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
-		if (!this.topLevelFile) {
-			if (topLevelSetting) {
-				this.topLevelFile = topLevelSetting;
-			}
-		}
-		if (!this.topLevelFile) {
-			vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
-		}
-		else {
-			const path = vscode.workspace.rootPath;
+
+
+
+		// let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+		// if (!this.topLevelFile) {
+		// 	if (topLevelSetting) {
+		// 		this.topLevelFile = topLevelSetting;
+		// 	}
+		// }
+		// if (!this.topLevelFile) {
+		// 	vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
+		// }
+
+		this.topLevelFile = this.getTopLevelFile();
+
+		let workspaceFolder = vscode.workspace.workspaceFolders;
+		// if (workspaceFolder) {
+		// 	let thisWorkspace = workspaceFolder[0];
+		// else {
+		if (workspaceFolder) {
+			const path = workspaceFolder[0].uri.fsPath;
 			console.log('start analyzing with root file ' + this.topLevelFile);
 
-			let files: string[] = [];
-			getVhdlFiles(path!, files);
+			let files: string[] = getSourceFiles(path);
+			// getVhdlFiles(path!, files);
 
 
-			// files.forEach(file =>{this.entityList.push(new Entity(file));});
-			// files.forEach(function(this:any, file:string)
-			// {
-			// 	this.entityList.push(new Entity(file));
-			// }.bind(this)	
-			// );
 
-			// readInterface.on('line', function(this:any, line: any) {
-
-			// files.forEach(file =>{
-			// 	var newEntity = new Entity(file);
-			// 	if(file === this.topLevelFile)
-			// 	{
-			// 		this.topLevelEntity = newEntity;
-			// 	}
-			// 	this.entityList.push(newEntity);
-			// });
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
 				title: "Analyzing VHDL file ",
@@ -108,16 +102,19 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 	}
 
 	getChildren(element?: Entity): Thenable<Entity[]> {
-		let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
-		if (!this.topLevelFile) {
-			if (topLevelSetting) {
-				this.topLevelFile = topLevelSetting;
-			}
-			vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
-			return Promise.resolve([]);
-		}
 
-		const root = [new Entity("\test\test\entity1.vhd")];
+
+		// let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+		// if (!this.topLevelFile) {
+		// 	if (topLevelSetting) {
+		// 		this.topLevelFile = topLevelSetting;
+		// 	}
+		// 	vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
+		// 	return Promise.resolve([]);
+		// }
+		// this.topLevelFile = this.getTopLevelFile();
+
+
 
 		if (element) {
 			return Promise.resolve(element.childEntities);
@@ -138,22 +135,56 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 
 		return true;
 	}
+
+	private getTopLevelFile(): string | undefined {
+		let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
+		if (topLevelSetting) {
+			if (this.pathExists(topLevelSetting)) {
+				return topLevelSetting;
+			}
+
+			let workspaceFolder = vscode.workspace.workspaceFolders;
+			if (workspaceFolder) {
+				let thisWorkspace = workspaceFolder[0];
+				let newPath = path.join(thisWorkspace.uri.fsPath, topLevelSetting);
+
+				if (this.pathExists(newPath)) {
+					return newPath;
+				}
+			}
+		}
+
+		vscode.window.showErrorMessage('Top level file not set in settings, cannot analyze VHDL workspace.');
+
+		return undefined;
+	}
 }
 
-function getVhdlFiles(dir: String, filelist: string[]) {
+function getSourceFiles(dir: String): string[] {
+	let sourceExtensions: string[] = ['.vhd', '.qsys'];
 	var path = require('path');
 	var fs = require('fs'),
 
 		files = fs.readdirSync(dir);
-	filelist = filelist || [];
+	let filelist: string[] = [];
 
-	files.forEach(function (file: String) {
+
+	for (const file of files) {
 		if (fs.statSync(path.join(dir, file)).isDirectory()) {
-			filelist = getVhdlFiles(path.join(dir, file), filelist);
+			// let newfiles = ;
+			filelist = filelist.concat(getSourceFiles(path.join(dir, file)));
+			// filelist = getSourceFiles(path.join(dir, file), filelist);
 		}
-		else if (path.extname(file) === ".vhd") {
-			filelist.push(path.join(dir, file));
+		else {
+			let ext = path.extname(file);
+			if (sourceExtensions.includes(ext)) {
+				filelist.push(path.join(dir, file));
+			}
 		}
-	});
+	}
+
+	// files.forEach(function (file: String) {
+
+	// });
 	return filelist;
 }
