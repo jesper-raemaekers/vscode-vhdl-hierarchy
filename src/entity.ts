@@ -60,11 +60,6 @@ export class Entity extends vscode.TreeItem {
         return "";
     }
 
-    // iconPath = {
-    // 	light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),
-    // 	dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
-    // };
-
     public getChildren(): Entity[] {
         if (this.type === Entity.Type.Qsys) {
             let childrenofchildren: Entity[] = [];

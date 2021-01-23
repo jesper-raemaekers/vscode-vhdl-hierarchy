@@ -14,7 +14,7 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 	entityList: Entity[];
 	topLevelEntity: Entity | undefined;
 
-	constructor(private workspaceRoot: string) {
+	constructor() {
 		this.entityList = [];
 	}
 
@@ -22,40 +22,19 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 		this._onDidChangeTreeData.fire(undefined);
 	}
 
-	// editEntity(ent:Entity): void{
-	// 	vscode.window.showTextDocument(ent.filePath);
-	// }
-
-
 	async analyze() {
 		this.entityList = [];
 
 
-
-		// let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
-		// if (!this.topLevelFile) {
-		// 	if (topLevelSetting) {
-		// 		this.topLevelFile = topLevelSetting;
-		// 	}
-		// }
-		// if (!this.topLevelFile) {
-		// 	vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
-		// }
-
 		this.topLevelFile = this.getTopLevelFile();
 
 		let workspaceFolder = vscode.workspace.workspaceFolders;
-		// if (workspaceFolder) {
-		// 	let thisWorkspace = workspaceFolder[0];
-		// else {
+
 		if (workspaceFolder) {
 			const path = workspaceFolder[0].uri.fsPath;
 			console.log('start analyzing with root file ' + this.topLevelFile);
 
 			let files: string[] = getSourceFiles(path);
-			// getVhdlFiles(path!, files);
-
-
 
 			await vscode.window.withProgress({
 				location: vscode.ProgressLocation.Notification,
@@ -65,14 +44,15 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 			}, async (progress, token) => {
 				const p = new Promise(async resolve => {
 
-					progress.report({ increment: 0 });
+					// progress.report({ increment: 0 });
 
-					var progressCounter = 0;
+					// var progressCounter = 0;
 					for (const file of files) {
-						progressCounter++;
+						// progressCounter++;
 
 						this.entityList.push(new Entity(file));
-						progress.report({ increment: (progressCounter / files.length), message: this.entityList[this.entityList.length - 1].label + "..." });
+						// progress.report({ increment: (progressCounter / files.length), message: this.entityList[this.entityList.length - 1].label + "..." });
+						progress.report({ message: this.entityList[this.entityList.length - 1].label + "..." });
 						if (file === this.topLevelFile) {
 							// not found because is now filename instead of path
 							this.topLevelEntity = this.entityList[this.entityList.length - 1];
@@ -102,19 +82,6 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 	}
 
 	getChildren(element?: Entity): Thenable<Entity[]> {
-
-
-		// let topLevelSetting: string | undefined = vscode.workspace.getConfiguration('VHDL-hierarchy', null).get('TopLevelFile');
-		// if (!this.topLevelFile) {
-		// 	if (topLevelSetting) {
-		// 		this.topLevelFile = topLevelSetting;
-		// 	}
-		// 	vscode.window.showInformationMessage('No top levl file set. Set a top level file using the SetTopLevel command');
-		// 	return Promise.resolve([]);
-		// }
-		// this.topLevelFile = this.getTopLevelFile();
-
-
 
 		if (element) {
 			return Promise.resolve(element.getChildren());
@@ -183,8 +150,5 @@ function getSourceFiles(dir: String): string[] {
 		}
 	}
 
-	// files.forEach(function (file: String) {
-
-	// });
 	return filelist;
 }
