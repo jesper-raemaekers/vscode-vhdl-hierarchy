@@ -117,7 +117,7 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 
 
 		if (element) {
-			return Promise.resolve(element.childEntities);
+			return Promise.resolve(element.getChildren());
 		} else if (this.topLevelEntity) {
 			return Promise.resolve([this.topLevelEntity]);
 		} else {
@@ -161,7 +161,7 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 }
 
 function getSourceFiles(dir: String): string[] {
-	let sourceExtensions: string[] = ['.vhd', '.qsys'];
+	let sourceExtensions: string[] = ['.vhd', '.qsys', '.tcl'];
 	var path = require('path');
 	var fs = require('fs'),
 

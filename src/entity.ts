@@ -1,5 +1,7 @@
 import { emit } from 'process';
+import { pathToFileURL } from 'url';
 import * as vscode from 'vscode';
+import * as path from 'path';
 
 
 export class Entity extends vscode.TreeItem {
@@ -35,6 +37,9 @@ export class Entity extends vscode.TreeItem {
                 this.type = Entity.Type.Qsys;
                 this.iconPath = new vscode.ThemeIcon('server-environment');
                 break;
+            case '.tcl':
+                this.type = Entity.Type.HwTcl;
+                break;
             default:
                 this.type = Entity.Type.Vhdl;
         }
@@ -60,6 +65,17 @@ export class Entity extends vscode.TreeItem {
     // 	dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
     // };
 
+    public getChildren(): Entity[] {
+        if (this.type === Entity.Type.Qsys) {
+            let childrenofchildren: Entity[] = [];
+            for (const child of this.childEntities) {
+                childrenofchildren = childrenofchildren.concat(child.getChildren());
+            }
+            return childrenofchildren;
+        }
+        return this.childEntities;
+    }
+
     public readFromFile(): Promise<undefined> {
         var foo = new Promise<undefined>((resolve, reject) => {
             const readline = require('readline');
@@ -74,8 +90,16 @@ export class Entity extends vscode.TreeItem {
             switch (this.type) {
                 case Entity.Type.Vhdl:
                     readInterface.on('line', function (this: any, line: any) { this.parseVhdlLine(line); }.bind(this));
+                    break;
+                case Entity.Type.HwTcl:
+                    readInterface.on('line', function (this: any, line: any) { this.parseHwTclLine(line); }.bind(this));
+                    break;
+                case Entity.Type.Qsys:
+                    // this.label =  this.filePath.
+                    this.label = path.basename(this.filePath).split('.')[0];
+                    readInterface.on('line', function (this: any, line: any) { this.parseQsysLine(line); }.bind(this));
+                    break;
             }
-
 
             readInterface.on('close', () => {
                 console.log('done reading');
@@ -86,6 +110,27 @@ export class Entity extends vscode.TreeItem {
             });
         });
         return foo;
+    }
+
+    private parseQsysLine(line: any) {
+        const entityEx = /kind="(?<entity>\w+)"/;
+        var regexpEntity = new RegExp(entityEx, 'i'), testEntity = regexpEntity.exec(line);
+        if (testEntity?.groups) {
+            this.childEntitiesText.push(testEntity.groups['entity']);
+        }
+    }
+
+    private parseHwTclLine(line: any) {
+        const nameEx = /set_module_property\s\w+\s{(?<name>\w+)}/; // set_module_property\s\w+\s{(?<name>\w+)}
+        const entityEx = /TOP_LEVEL\s(?<entity>\w+)/; // TOP_LEVEL\s(?<entity>\w+)
+        var regexpName = new RegExp(nameEx, 'i'), testName = regexpName.exec(line);
+        var regexpEntity = new RegExp(entityEx, 'i'), testEntity = regexpEntity.exec(line);
+        if (testName?.groups) {
+            this.label = testName.groups['name'];
+        }
+        if (testEntity?.groups) {
+            this.childEntitiesText.push(testEntity.groups['entity']);
+        }
     }
 
     private parseVhdlLine(line: any) {
@@ -136,6 +181,7 @@ export namespace Entity {
     export enum Type {
         Vhdl,
         Qsys,
+        HwTcl,
 
     }
 }

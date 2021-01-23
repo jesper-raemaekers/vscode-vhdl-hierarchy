@@ -106,7 +106,7 @@ class EntityProvider {
         // }
         // this.topLevelFile = this.getTopLevelFile();
         if (element) {
-            return Promise.resolve(element.childEntities);
+            return Promise.resolve(element.getChildren());
         }
         else if (this.topLevelEntity) {
             return Promise.resolve([this.topLevelEntity]);
@@ -145,7 +145,7 @@ class EntityProvider {
 }
 exports.EntityProvider = EntityProvider;
 function getSourceFiles(dir) {
-    let sourceExtensions = ['.vhd', '.qsys'];
+    let sourceExtensions = ['.vhd', '.qsys', '.tcl'];
     var path = __webpack_require__(/*! path */ "path");
     var fs = __webpack_require__(/*! fs */ "fs"), files = fs.readdirSync(dir);
     let filelist = [];
@@ -180,6 +180,7 @@ function getSourceFiles(dir) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Entity = void 0;
 const vscode = __webpack_require__(/*! vscode */ "vscode");
+const path = __webpack_require__(/*! path */ "path");
 class Entity extends vscode.TreeItem {
     constructor(filePath) {
         super("...");
@@ -201,6 +202,9 @@ class Entity extends vscode.TreeItem {
             case '.qsys':
                 this.type = Entity.Type.Qsys;
                 this.iconPath = new vscode.ThemeIcon('server-environment');
+                break;
+            case '.tcl':
+                this.type = Entity.Type.HwTcl;
                 break;
             default:
                 this.type = Entity.Type.Vhdl;
@@ -224,6 +228,16 @@ class Entity extends vscode.TreeItem {
     // 	light: path.join(__filename, '..', '..', 'resources', 'light', 'dependency.svg'),
     // 	dark: path.join(__filename, '..', '..', 'resources', 'dark', 'dependency.svg')
     // };
+    getChildren() {
+        if (this.type === Entity.Type.Qsys) {
+            let childrenofchildren = [];
+            for (const child of this.childEntities) {
+                childrenofchildren = childrenofchildren.concat(child.getChildren());
+            }
+            return childrenofchildren;
+        }
+        return this.childEntities;
+    }
     readFromFile() {
         var foo = new Promise((resolve, reject) => {
             const readline = __webpack_require__(/*! readline */ "readline");
@@ -236,6 +250,15 @@ class Entity extends vscode.TreeItem {
             switch (this.type) {
                 case Entity.Type.Vhdl:
                     readInterface.on('line', function (line) { this.parseVhdlLine(line); }.bind(this));
+                    break;
+                case Entity.Type.HwTcl:
+                    readInterface.on('line', function (line) { this.parseHwTclLine(line); }.bind(this));
+                    break;
+                case Entity.Type.Qsys:
+                    // this.label =  this.filePath.
+                    this.label = path.basename(this.filePath).split('.')[0];
+                    readInterface.on('line', function (line) { this.parseQsysLine(line); }.bind(this));
+                    break;
             }
             readInterface.on('close', () => {
                 console.log('done reading');
@@ -246,6 +269,25 @@ class Entity extends vscode.TreeItem {
             });
         });
         return foo;
+    }
+    parseQsysLine(line) {
+        const entityEx = /kind="(?<entity>\w+)"/;
+        var regexpEntity = new RegExp(entityEx, 'i'), testEntity = regexpEntity.exec(line);
+        if (testEntity === null || testEntity === void 0 ? void 0 : testEntity.groups) {
+            this.childEntitiesText.push(testEntity.groups['entity']);
+        }
+    }
+    parseHwTclLine(line) {
+        const nameEx = /set_module_property\s\w+\s{(?<name>\w+)}/; // set_module_property\s\w+\s{(?<name>\w+)}
+        const entityEx = /TOP_LEVEL\s(?<entity>\w+)/; // TOP_LEVEL\s(?<entity>\w+)
+        var regexpName = new RegExp(nameEx, 'i'), testName = regexpName.exec(line);
+        var regexpEntity = new RegExp(entityEx, 'i'), testEntity = regexpEntity.exec(line);
+        if (testName === null || testName === void 0 ? void 0 : testName.groups) {
+            this.label = testName.groups['name'];
+        }
+        if (testEntity === null || testEntity === void 0 ? void 0 : testEntity.groups) {
+            this.childEntitiesText.push(testEntity.groups['entity']);
+        }
     }
     parseVhdlLine(line) {
         const entityEx = /entity\s(?<entity>\w+)\sis/;
@@ -292,6 +334,7 @@ exports.Entity = Entity;
     (function (Type) {
         Type[Type["Vhdl"] = 0] = "Vhdl";
         Type[Type["Qsys"] = 1] = "Qsys";
+        Type[Type["HwTcl"] = 2] = "HwTcl";
     })(Type = Entity.Type || (Entity.Type = {}));
 })(Entity = exports.Entity || (exports.Entity = {}));
 
