@@ -100,52 +100,6 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 				return p;
 			});
 
-			// files.forEach(function(this:any, file:string)
-			// 	{
-
-
-			// 	}.bind(this)	
-			// 	);
-
-			// await this.entityList[this.entityList.length - 1].readFromFile();	
-			// var bar = new Promise((resolve, reject) => {
-			// 	files.forEach(function(this:any, file:string)
-			// 	{
-			// 		this.entityList.push(new Entity(file));
-			// 		if (file === this.topLevelFile)
-			// 		{
-			// 			this.topLevelEntity = this.entityList[this.entityList.length - 1];
-			// 		}
-
-
-			// 	}.bind(this)	
-			// 	);
-			// 	resolve();
-			// });
-
-			// bar.then(() => {
-			// 	console.log('All done! number of entities: ' + this.entityList.length);
-			// 	console.log('top level entity name: ' + this.topLevelEntity?.label);
-			// });
-
-			// // await this.entityList[0].readFromFile();
-
-			// // var foo = new Promise((resolve, reject) => {
-			// // 	this.entityList.forEach(async function(this:any, ent:Entity)
-			// // 	{
-			// // 		await ent.readFromFile();
-			// // 		resolve();
-
-			// // 	}.bind(this)	
-			// // 	);
-
-			// // });
-
-			// // foo.then(() => {
-			// // 	console.log('All done 2 number of entities: ' + this.entityList.length);
-			// // });
-
-
 		}
 	}
 
@@ -174,56 +128,6 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 		}
 
 	}
-
-	//  public getVhdlFiles(dir:String, filelist:string[] ) : string[]
-	// {
-	// 	var path = require('path');
-	// 	var fs = require('fs'),
-
-	// 	files = fs.readdirSync(dir);
-	// 	filelist = filelist || [];
-
-	// 	files.forEach(function(file:String) {
-	// 		if (fs.statSync(path.join(dir, file)).isDirectory()) {
-	// 			filelist = EntityProvider.getVhdlFiles(path.join(dir, file), filelist);
-	// 		}
-	// 		else if (path.extname(file) === ".vhd"){
-	// 			filelist.push(path.join(dir, file));
-	// 		}
-	// 	});
-	// 	return filelist;
-	// }
-
-	// /**
-	//  * Given the path to package.json, read all its dependencies and devDependencies.
-	//  */
-	// private getDepsInPackageJson(packageJsonPath: string): Dependency[] {
-	// 	if (this.pathExists(packageJsonPath)) {
-	// 		const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-
-	// 		const toDep = (moduleName: string, version: string): Dependency => {
-	// 			if (this.pathExists(path.join(this.workspaceRoot, 'node_modules', moduleName))) {
-	// 				return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.Collapsed);
-	// 			} else {
-	// 				return new Dependency(moduleName, version, vscode.TreeItemCollapsibleState.None, {
-	// 					command: 'extension.openPackageOnNpm',
-	// 					title: '',
-	// 					arguments: [moduleName]
-	// 				});
-	// 			}
-	// 		};
-
-	// 		const deps = packageJson.dependencies
-	// 			? Object.keys(packageJson.dependencies).map(dep => toDep(dep, packageJson.dependencies[dep]))
-	// 			: [];
-	// 		const devDeps = packageJson.devDependencies
-	// 			? Object.keys(packageJson.devDependencies).map(dep => toDep(dep, packageJson.devDependencies[dep]))
-	// 			: [];
-	// 		return deps.concat(devDeps);
-	// 	} else {
-	// 		return [];
-	// 	}
-	// }
 
 	private pathExists(p: string): boolean {
 		try {
