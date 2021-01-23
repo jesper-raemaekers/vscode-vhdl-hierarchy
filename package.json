@@ -2,6 +2,7 @@
 	"name": "vhdl-hierarchy",
 	"displayName": "VHDL hierarchy",
 	"description": "A outline provider for VHDL projects",
+	"publisher": "JesperRaemaekers",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.52.0"
@@ -10,16 +11,45 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vhdl-hierarchy.helloWorld"
+		"onStartupFinished"
 	],
-	"main": "./out/extension.js",
+	"main": "./dist/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "vhdl-hierarchy.helloWorld",
-				"title": "Hello World"
+				"command": "vhdl-hierarchy.setTopLevel",
+				"title": "Set Top Level file"
+			},
+			{
+				"command": "vhdl-hierarchy.analyze",
+				"title": "Analyze the workspace"
+			},
+			{
+				"command": "vhdl-hierarchy.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			}
-		]
+		],
+		"views": {
+			"explorer": [
+				{
+					"id": "vhdlHierachy",
+					"name": "VHDL Hierachy"
+				}
+			]
+		},
+		"menus": {
+			"view/title": [
+				{
+					"command": "vhdl-hierarchy.analyze",
+					"when": "view == entityHierachy",
+					"group": "navigation"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"compile": "tsc -p ./",
