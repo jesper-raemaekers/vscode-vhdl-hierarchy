@@ -5,6 +5,7 @@ This extension analyzes the workspace for VHDL, Qsys and _hw.tcl files to genera
 ## Features
 
 Creates an outline.
+Can create hierarchy image using graphviz. requires dot command to be in path.
 
 ## Extension Settings
 
@@ -18,6 +19,9 @@ No error reporting and fragile parsing of VHDL, Qsys and _hw.tcl files. No suppo
 
 ## Release Notes
 
+### 0.0.2
+
+Added hierarchy image generator using graphviz dot.
 
 ### 0.0.1
 

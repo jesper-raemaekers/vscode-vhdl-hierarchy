@@ -18,7 +18,7 @@
 		"commands": [
 			{
 				"command": "vhdl-hierarchy.createDot",
-				"title": "Create dot file from hierarchy"
+				"title": "Create dot file and PNG from hierarchy"
 			},
 			{
 				"command": "vhdl-hierarchy.analyze",
@@ -58,7 +58,7 @@
 				"properties": {
 					"VHDL-hierarchy.TopLevelFile": {
 						"type": "string",
-						"description": "Top level file name",
+						"description": "Top level file path from project root",
 						"default": ""
 					}
 				}
