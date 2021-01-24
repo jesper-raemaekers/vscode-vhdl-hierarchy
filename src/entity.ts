@@ -169,6 +169,18 @@ export class Entity extends vscode.TreeItem {
         }
     }
 
+    public getAllChildren(): Entity[] {
+        let children: Entity[] = [];
+
+        children.push(this);
+
+        for (const child of this.childEntities) {
+            children = children.concat(child.getAllChildren());
+        }
+
+        return children;
+    }
+
 
 }
 

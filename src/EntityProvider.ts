@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { exec } from "child_process";
 
 import { Entity } from './entity';
 
@@ -90,6 +91,44 @@ export class EntityProvider implements vscode.TreeDataProvider<Entity> {
 		} else {
 			return Promise.resolve([]);
 		}
+
+	}
+
+	async createDot() {
+		var Graph = require("graphlib").Graph, dot = require("graphlib-dot");
+
+		var digraph = new Graph({ multigraph: true });
+
+		if (this.topLevelEntity) {
+			let nodes = this.topLevelEntity.getAllChildren();
+
+			// digraph.setNode('"splines=ortho"');
+			for (const node of nodes) {
+				digraph.setNode(node.label, { shape: 'box' });
+			}
+
+			for (const node of nodes) {
+				for (const child of node.childEntities) {
+					digraph.setEdge(node.label, child.label);
+				}
+			}
+		}
+
+		let workspace = vscode.workspace.workspaceFolders;
+		if (workspace) {
+			let pDot = path.join(workspace[0].uri.fsPath, 'hierarchy.dot');
+			fs.writeFileSync(pDot, dot.write(digraph));
+
+			exec(`dot -Tpng hierarchy.dot -o hierarchy.png`, {
+				cwd: workspace[0].uri.fsPath
+			}, (error, stdout, stderr) => {
+				if (error) {
+					console.warn(error);
+				}
+			});
+
+		}
+
 
 	}
 

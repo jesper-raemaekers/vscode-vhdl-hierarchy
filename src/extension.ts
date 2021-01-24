@@ -16,6 +16,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.commands.registerCommand('vhdl-hierarchy.analyze', () => entityProvider.analyze());
 
+	vscode.commands.registerCommand('vhdl-hierarchy.createDot', () => entityProvider.createDot());
+
 	vscode.commands.executeCommand('vhdl-hierarchy.analyze');
 
 }
